@@ -16,18 +16,36 @@ export default function TransactionsByMonth() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1 style={{ textAlign: "center" }}>📅 Transactions by Month</h1>
+      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
+        📅 Transactions by Month
+      </h1>
+
       {Object.entries(data).map(([month, txns]) => (
-        <div key={month} style={{ marginBottom: "30px" }}>
-          <h2>{month}</h2>
-          <table border="1" cellPadding="8" width="100%">
-            <thead>
+        <div
+          key={month}
+          style={{
+            marginBottom: "40px",
+            border: "1px solid #ccc",
+            borderRadius: "8px",
+            padding: "16px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+          }}
+        >
+          <h2 style={{ marginBottom: "10px" }}>{month}</h2>
+          <table
+            border="1"
+            cellPadding="8"
+            width="100%"
+            style={{ borderCollapse: "collapse" }}
+          >
+            <thead style={{ backgroundColor: "#f5f5f5" }}>
               <tr>
                 <th>Date</th>
                 <th>Description</th>
                 <th>Merchant</th>
                 <th>Category</th>
                 <th>Amount ($)</th>
+                <th>Running Balance ($)</th>
               </tr>
             </thead>
             <tbody>
@@ -44,6 +62,15 @@ export default function TransactionsByMonth() {
                     }}
                   >
                     {t.amount.toFixed(2)}
+                  </td>
+                  <td
+                    style={{
+                      color: "#555",
+                      fontWeight: "500",
+                      textAlign: "right",
+                    }}
+                  >
+                    {t.running_balance?.toFixed(2)}
                   </td>
                 </tr>
               ))}
