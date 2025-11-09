@@ -79,7 +79,10 @@ The application will be available at:
 - Frontend: `http://localhost:5173` (Vite default)
 - Backend API: `http://localhost:5000`
 
-## 💻
+## 💻 Screenshots
+![alt text](landing.png) ![alt text](dashboard.png) ![alt text](dashboard2.png) 
+![alt text](cards.png) ![alt text](addCard.png) ![alt text](subscriptions.png)
+![alt text](transaction.png) ![alt text](Aiassist.png)
 
 ## 📱 Application Structure
 
