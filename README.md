@@ -1,6 +1,6 @@
 # Personal Finance Dashboard
 
-A full-stack personal finance management application built for HackUTD 2025. This application provides users with comprehensive financial tracking, AI-powered assistance, and intelligent insights into their spending patterns.
+A full-stack personal finance management application. This application provides users with comprehensive financial tracking, AI-powered assistance, and intelligent insights into their spending patterns.
 
 ## 🌟 Features
 
