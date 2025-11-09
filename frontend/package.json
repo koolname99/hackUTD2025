@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.8.0",
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.13.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "rechart": "^0.0.1",
     "recharts": "^3.3.0"
   },
   "devDependencies": {

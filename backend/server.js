@@ -811,90 +811,90 @@ app.put("/api/subscriptions/:id", async (req, res) => {
 });
 
 // AI Chat endpoint using Gemini API
+// Gemini AI Chat endpoint
 app.post("/api/ai/chat", async (req, res) => {
   try {
-    const { message } = req.body;
-    
-    if (!message) {
-      return res.status(400).json({ error: "Message is required" });
+    const { message, email } = req.body;
+    if (!message) return res.status(400).json({ error: "Message is required" });
+
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    const GEMINI_MODEL = "gemini-2.5-flash";
+    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+    console.log(`🧠 User (${email}) asked: ${message}`);
+
+    // 1️⃣ Lấy dữ liệu transaction từ backend
+    const txnRes = await axios.get(`http://localhost:5000/api/transactions?email=${email}`);
+    const groupedData = txnRes.data || {};
+    const allTxns = Object.values(groupedData).flat();
+
+    if (allTxns.length === 0) {
+      return res.json({ response: "⚠️ No transaction data found for this user." });
     }
 
-    const GEMINI_API_KEY = "AIzaSyCvaT2s6nvpt9Sz02rcrCaTx4w-jP9G6X8";
-    // Try gemini-1.5-pro first, fallback to gemini-pro
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
+    // 2️⃣ Tóm tắt dữ liệu cho Gemini
+    const sortedTxns = allTxns.sort((a, b) => new Date(b.date) - new Date(a.date)); // sắp xếp mới nhất trước
+const limitedTxns = sortedTxns.slice(0, 200); // lấy 200 giao dịch gần nhất (bao gồm tháng 11)
+const summary = limitedTxns
+  .map(txn => `${txn.date} | ${txn.category} | ${txn.merchant || "Unknown"} | ${txn.amount}`)
+  .join("\n");
 
-    try {
-      const response = await axios.post(GEMINI_API_URL, {
-        contents: [{
-          parts: [{
-            text: message
-          }]
-        }]
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+    // 3️⃣ Tạo prompt cho Gemini
+    const prompt = `
+You are a concise and intelligent financial assistant AI.
+The user has provided real transaction data for financial insights.
 
-      const data = response.data;
-      
-      // Extract the response text from Gemini API response
-      let aiResponse = 'Sorry, I cannot answer this question.';
-      
-      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-        aiResponse = data.candidates[0].content.parts[0].text || aiResponse;
-      }
+Here is the user's recent transaction data (date | category | merchant | amount):
+${summary}
 
-      return res.json({ response: aiResponse });
-    } catch (modelError) {
-      // Fallback to gemini-pro if gemini-1.5-pro fails
-      console.log('Trying fallback model gemini-pro...');
-      const FALLBACK_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
-      
-      const fallbackResponse = await axios.post(FALLBACK_URL, {
-        contents: [{
-          parts: [{
-            text: message
-          }]
-        }]
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+User's question: "${message}"
 
-      const fallbackData = fallbackResponse.data;
-      
-      let aiResponse = 'Sorry, I cannot answer this question.';
-      
-      if (fallbackData.candidates && fallbackData.candidates[0] && fallbackData.candidates[0].content) {
-        aiResponse = fallbackData.candidates[0].content.parts[0].text || aiResponse;
-      }
+🎯 Instructions:
+- If the user's message is just a greeting (e.g., "hi", "hello", "how are you"), respond naturally and briefly (e.g., "Hello! How can I assist you today?") without analyzing data.
+- If the question is about **a specific time period or category**, only analyze **that part** — do NOT repeat old summaries or overall history.
+- Keep responses **under 120 words**.
+- Use **bullet points and short lines** for readability.
+- Keep **only the most relevant data** for the question.
+- Avoid repeating monthly averages or long explanations unless the user asks for a summary.
+- End with one short, friendly takeaway or tip (e.g., "💡 Tip: Try lowering dining expenses slightly next month.").
 
-      return res.json({ response: aiResponse });
-    }
+✅ Example:
+**Question:** "How much did I spend in November?"
+**Answer:**  
+You spent **$4,742.46 in November 2025**.  
+Main categories:  
+- 🏠 Housing: $2,550  
+- 🍔 Dining: $250  
+- 🛒 Shopping: $300  
+
+💡 Tip: Focus on reducing groceries and dining next month.
+
+Now, respond to the user’s question following this concise format.
+`;
+
+
+
+    // 4️⃣ Gửi đến Gemini API
+    const response = await axios.post(GEMINI_URL, {
+      contents: [{ parts: [{ text: prompt }] }],
+    });
+
+    const aiResponse =
+      response.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Sorry, I couldn’t generate an answer.";
+
+    console.log("✅ Gemini replied:", aiResponse);
+    res.json({ response: aiResponse });
   } catch (err) {
-    console.error("Error calling Gemini API:", err);
-    
-    // Handle axios errors
-    if (err.response) {
-      console.error('Gemini API error response:', JSON.stringify(err.response.data, null, 2));
-      console.error('Status:', err.response.status);
-      
-      // Return more detailed error for debugging
-      return res.status(err.response.status).json({ 
-        error: 'Failed to get response from AI',
-        response: `Sorry, an error occurred: ${err.response.data?.error?.message || err.response.statusText || 'Unknown error'}. Please check the API key and try again.`,
-        details: err.response.data
-      });
-    }
-    
-    return res.status(500).json({ 
+    console.error("❌ Gemini AI error:", err.response?.data || err.message);
+    res.status(500).json({
       error: err.message,
-      response: `Sorry, an error occurred while connecting to AI: ${err.message}. Please try again later.`
+      details: err.response?.data || "No response from Gemini API",
     });
   }
 });
+
+
 
 // MongoDB connection
 const mongoUri = process.env.MONGO_URI || process.env.MONGO_URL;
