@@ -80,9 +80,40 @@ The application will be available at:
 - Backend API: `http://localhost:5000`
 
 ## 💻 Screenshots
-![alt text](landing.png) ![alt text](dashboard.png) ![alt text](dashboard2.png) 
-![alt text](cards.png) ![alt text](addCard.png) ![alt text](subscriptions.png)
-![alt text](transaction.png) ![alt text](Aiassist.png)
+
+### 🏠 Landing Page
+<img src="landing.png" alt="Landing Page" width="800">
+
+*Welcome screen with authentication and app overview*
+
+### 📊 Financial Dashboard
+<div style="display: flex; gap: 10px;">
+  <img src="dashboard.png" alt="Main Dashboard" width="400">
+  <img src="dashboard2.png" alt="Dashboard Overview" width="400">
+</div>
+
+*Comprehensive financial overview with charts and spending analytics*
+
+### 💳 Cards Management
+<div style="display: flex; gap: 10px;">
+  <img src="cards.png" alt="Cards Overview" width="400">
+  <img src="addCard.png" alt="Add New Card" width="400">
+</div>
+
+*Credit card management interface with easy card addition*
+
+### 📅 Subscriptions & Transactions
+<div style="display: flex; gap: 10px;">
+  <img src="subscriptions.png" alt="Subscriptions Tracking" width="400">
+  <img src="transaction.png" alt="Transaction Management" width="400">
+</div>
+
+*Track recurring subscriptions and manage monthly transactions*
+
+### 🤖 AI Assistant
+<img src="Aiassist.png" alt="AI Financial Assistant" width="800">
+
+*Intelligent chatbot providing personalized financial advice and insights*
 
 ## 📱 Application Structure
 
