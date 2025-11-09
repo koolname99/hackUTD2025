@@ -86,7 +86,7 @@ export default function Landing() {
               <div className="feature-icon">🔒</div>
               <h3 className="feature-title">Secure & Private</h3>
               <p className="feature-description">
-                Your financial data is encrypted and protected with industry-leading security measures.
+                Your financial data is safe and secure with Auth0 authentication and 2-step verification. Industry-leading security measures protect your information.
               </p>
             </div>
             <div className="feature-card">

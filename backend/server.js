@@ -116,15 +116,7 @@ const mockTransactions = {
   ],
   "2025-11": [
     { txn_id: "43", date: "2025-11-05", description: "Rent", merchant: "Landlord", category: "Housing", amount: -1200 },
-    { txn_id: "44", date: "2025-11-08", description: "Shopping Spree", merchant: "Amazon", category: "Shopping", amount: -850 },
-    { txn_id: "45", date: "2025-11-10", description: "Restaurant", merchant: "Capital One Restaurant", category: "Food", amount: -250 },
-    { txn_id: "46", date: "2025-11-12", description: "Grocery Store", merchant: "Whole Foods", category: "Food", amount: -320 },
-    { txn_id: "47", date: "2025-11-15", description: "Gas Station", merchant: "Shell", category: "Transportation", amount: -180 },
-    { txn_id: "48", date: "2025-11-18", description: "Electric Bill", merchant: "BofA Utility", category: "Utilities", amount: -150 },
-    { txn_id: "49", date: "2025-11-20", description: "Entertainment", merchant: "AMC", category: "Entertainment", amount: -120 },
-    { txn_id: "50", date: "2025-11-22", description: "Shopping", merchant: "Target", category: "Shopping", amount: -450 },
-    { txn_id: "51", date: "2025-11-25", description: "Restaurant", merchant: "PNC Restaurant", category: "Food", amount: -180 },
-    { txn_id: "52", date: "2025-11-28", description: "Online Shopping", merchant: "Amazon", category: "Shopping", amount: -350 }
+    { txn_id: "44", date: "2025-11-08", description: "Shopping Spree", merchant: "Amazon", category: "Shopping", amount: -850 }
   ]
 };
 
