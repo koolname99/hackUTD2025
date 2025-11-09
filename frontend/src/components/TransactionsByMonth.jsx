@@ -1,56 +1,62 @@
-import { useEffect, useState } from "react";
-import { getTransactionsByMonth } from "../api";
+import './TransactionsByMonth.css'
 
-export default function TransactionsByMonth() {
-  const [data, setData] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getTransactionsByMonth().then((res) => {
-      setData(res);
-      setLoading(false);
-    });
-  }, []);
-
-  if (loading) return <p>Loading transactions...</p>;
+export default function TransactionsByMonth({ data }) {
+  if (!data || Object.keys(data).length === 0) {
+    return (
+      <div className="no-transactions">
+        <p>No transactions found.</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1 style={{ textAlign: "center" }}>📅 Transactions by Month</h1>
-      {Object.entries(data).map(([month, txns]) => (
-        <div key={month} style={{ marginBottom: "30px" }}>
-          <h2>{month}</h2>
-          <table border="1" cellPadding="8" width="100%">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Merchant</th>
-                <th>Category</th>
-                <th>Amount ($)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {txns.map((t) => (
-                <tr key={t.txn_id}>
-                  <td>{t.date}</td>
-                  <td>{t.description}</td>
-                  <td>{t.merchant || "-"}</td>
-                  <td>{t.category}</td>
-                  <td
-                    style={{
-                      color: t.amount < 0 ? "red" : "green",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {t.amount.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
+    <div className="transactions-by-month">
+      {Object.entries(data)
+        .sort(([a], [b]) => b.localeCompare(a))
+        .map(([month, txns]) => (
+          <div key={month} className="month-section">
+            <h3 className="month-header">{formatMonth(month)}</h3>
+            <div className="transactions-table-container">
+              <table className="transactions-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Merchant</th>
+                    <th>Category</th>
+                    <th className="amount-header">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {txns.map((t) => (
+                    <tr key={t.txn_id} className="transaction-row">
+                      <td className="date-cell">{formatDate(t.date)}</td>
+                      <td className="description-cell">{t.description}</td>
+                      <td className="merchant-cell">{t.merchant || "-"}</td>
+                      <td>
+                        <span className="category-badge">{t.category}</span>
+                      </td>
+                      <td className={`amount-cell ${t.amount >= 0 ? 'positive' : 'negative'}`}>
+                        {t.amount >= 0 ? '+' : ''}${t.amount.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
     </div>
   );
+}
+
+function formatMonth(month) {
+  const [year, monthNum] = month.split('-');
+  const date = new Date(year, parseInt(monthNum) - 1);
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }

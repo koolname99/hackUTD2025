@@ -1,0 +1,137 @@
+.transactions-by-month {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.month-section {
+  margin-bottom: 8px;
+}
+
+.month-header {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.transactions-table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.transactions-table thead {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+.transactions-table th {
+  padding: 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.transactions-table .amount-header {
+  text-align: right;
+}
+
+.transaction-row {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s;
+}
+
+.transaction-row:hover {
+  background-color: #f9fafb;
+}
+
+.transaction-row:last-child {
+  border-bottom: none;
+}
+
+.transactions-table td {
+  padding: 16px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.date-cell {
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.description-cell {
+  font-weight: 500;
+  color: #1f2937;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.merchant-cell {
+  color: #6b7280;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  color: #0369a1;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.amount-cell {
+  text-align: right;
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.amount-cell.positive {
+  color: #059669;
+}
+
+.amount-cell.negative {
+  color: #dc2626;
+}
+
+.no-transactions {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .transactions-table {
+    font-size: 12px;
+  }
+  
+  .transactions-table th,
+  .transactions-table td {
+    padding: 12px 8px;
+  }
+  
+  .description-cell {
+    max-width: 150px;
+  }
+}
+
+
