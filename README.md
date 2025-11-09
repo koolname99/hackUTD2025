@@ -178,8 +178,10 @@ The Personal Finance Dashboard follows a modern full-stack architecture with cle
 ┌─────────────────┐    ┌─────────────────┐              │
 │   Auth0         │    │   AI Service    │              │
 │   Identity      │    │   (External)    │              │
-│   Provider      │◄───│   Financial AI  │──────────────┘
-└─────────────────┘    └─────────────────┘
+│   Provider      │    │   Financial AI  │              |
+└─────────────────┘    └─────────────────┘              |
+              ▲                                         |
+              |_________________________________________|
 ```
 
 ### Frontend Architecture
