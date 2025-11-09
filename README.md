@@ -294,6 +294,6 @@ Using Recharts library for:
 - **Expense Anomaly Detection**: Flag unusualy spending patterns and deavtivate credit card if necessary. 
 
 ## 👥 Team
-Developed for HackUTD 2025 by the hackUTD2025 team.
+Developed for HackUTD 2025 by a hackUTD2025 team.
 
 ---
