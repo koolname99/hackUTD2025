@@ -1,4 +1,4 @@
-"# Personal Finance Dashboard
+# Personal Finance Dashboard
 
 A full-stack personal finance management application built for HackUTD 2025. This application provides users with comprehensive financial tracking, AI-powered assistance, and intelligent insights into their spending patterns.
 
@@ -17,18 +17,12 @@ A full-stack personal finance management application built for HackUTD 2025. Thi
 
 ### Frontend
 - **React 19** - Modern UI framework
-- **Vite** - Fast build tool and development server
 - **Auth0** - Authentication and authorization
-- **Axios** - HTTP client for API requests
-- **Recharts** - Data visualization library
 - **CSS3** - Custom styling and animations
 
 ### Backend
 - **Node.js** - Runtime environment
-- **Express.js** - Web application framework
 - **MongoDB** - NoSQL database with Mongoose ODM
-- **CORS** - Cross-origin resource sharing
-- **dotenv** - Environment variable management
 
 ## 📋 Prerequisites
 
@@ -88,7 +82,7 @@ The application will be available at:
 ## 📱 Application Structure
 
 ```
-hackUTD2025-1/
+hackUTD2025/
 ├── backend/
 │   ├── models/
 │   │   └── Account.js          # MongoDB schema for user accounts
