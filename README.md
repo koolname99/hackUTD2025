@@ -24,6 +24,85 @@ A full-stack personal finance management application built for HackUTD 2025. Thi
 - **Node.js** - Runtime environment
 - **MongoDB** - NoSQL database with Mongoose ODM
 
+## 🏗️ Architecture
+
+### System Overview
+The Personal Finance Dashboard follows a modern full-stack architecture with clear separation of concerns:
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Backend       │    │   Database      │
+│   (React)       │◄──►│   (Node.js)     │◄──►│   (MongoDB)     │
+│                 │    │                 │    │                 │
+│ - Components    │    │ - REST API      │    │ - User Data     │
+│ - Auth0 Client  │    │ - Auth Routes   │    │ - Transactions  │
+│ - State Mgmt    │    │ - Data Models   │    │ - Categories    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+        │                       │                       ▲
+        │                       │                       │
+        ▼                       ▼                       │
+┌─────────────────┐    ┌─────────────────┐              │
+│   Auth0         │    │   AI Service    │              │
+│   Identity      │    │   (External)    │              │
+│   Provider      │◄───│   Financial AI  │──────────────┘
+└─────────────────┘    └─────────────────┘
+```
+
+### Frontend Architecture
+- **Component-Based Design**: Modular React components for each feature
+- **Layout System**: Centralized layout management with `DashboardLayout`
+- **Authentication Flow**: Auth0 integration with protected routes
+- **API Layer**: Centralized API service (`api.js`) for backend communication
+- **State Management**: React hooks and local state management
+- **Responsive Design**: CSS-based responsive layouts
+
+### Backend Architecture
+- **RESTful API**: Express.js server with organized route handlers
+- **Data Layer**: Mongoose ODM for MongoDB interactions
+- **Authentication**: Auth0 token validation and user verification
+- **Error Handling**: Centralized error handling and logging
+
+### Data Flow
+1. **User Authentication**: Auth0 handles login/logout and token management
+2. **API Requests**: Frontend makes authenticated requests to backend
+3. **Data Processing**: Backend processes requests and interacts with MongoDB
+4. **Response Handling**: Structured JSON responses with error handling
+5. **State Updates**: Frontend updates UI based on API responses
+
+### Security Architecture
+- **Authentication**: Auth0 JWT tokens for secure user identification
+- **Authorization**: Backend validates tokens and user permissions
+- **Email Verification**: Additional security layer for user registration
+- **Environment Variables**: Sensitive data protected via environment configuration
+
+### Database Schema
+```
+Account Collection:
+├── _id (ObjectId)
+├── email (String, unique)
+├── transactions (Array)
+│   ├── amount (Number)
+│   ├── category (String)
+│   ├── date (Date)
+│   └── description (String)
+├── categoryBudgets (Object)
+├── createdAt (Date)
+└── updatedAt (Date)
+```
+
+### Component Architecture
+```
+App.jsx
+├── Landing Component (Unauthenticated)
+└── DashboardLayout (Authenticated)
+    ├── Dashboard
+    │   ├── FinancialDashboard
+    │   └── TransactionsByMonth
+    ├── Cards Management
+    ├── Subscriptions Tracking
+    └── AIAssistant
+```
+
 ## 📋 Prerequisites
 
 Before running this application, make sure you have:
@@ -144,7 +223,6 @@ hackUTD2025/
 
 - Auth0 integration for secure authentication
 - Email verification system
-- CORS protection
 - Environment variable protection for sensitive data
 
 ## 🎨 UI/UX Features
@@ -171,20 +249,11 @@ Using Recharts library for:
 - Income vs. expense comparisons
 - Financial goal tracking
 
-## 🚧 Development Notes
+## 📝 Future Improvements
 
-This project was developed for HackUTD 2025 and includes:
-- Vietnamese language support in some components
-- Flexible MongoDB schema for rapid development
-- Modular component architecture for scalability
-
-## 📝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+- **Credit Score Monitoring**: Integration with credit score APIs.
+- **Multi-Currency Support**: For international users or foreign transactions.
+- **Expense Anomaly Detection**: Flag unusualy spending patterns and deavtivate credit card if necessary. 
 
 ## 👥 Team
 Developed for HackUTD 2025 by the hackUTD2025 team.
