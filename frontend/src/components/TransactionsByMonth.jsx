@@ -1,83 +1,62 @@
-import { useEffect, useState } from "react";
-import { getTransactionsByMonth } from "../api";
+import './TransactionsByMonth.css'
 
-export default function TransactionsByMonth() {
-  const [data, setData] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getTransactionsByMonth().then((res) => {
-      setData(res);
-      setLoading(false);
-    });
-  }, []);
-
-  if (loading) return <p>Loading transactions...</p>;
+export default function TransactionsByMonth({ data }) {
+  if (!data || Object.keys(data).length === 0) {
+    return (
+      <div className="no-transactions">
+        <p>No transactions found.</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
-        📅 Transactions by Month
-      </h1>
-
-      {Object.entries(data).map(([month, txns]) => (
-        <div
-          key={month}
-          style={{
-            marginBottom: "40px",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            padding: "16px",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-          }}
-        >
-          <h2 style={{ marginBottom: "10px" }}>{month}</h2>
-          <table
-            border="1"
-            cellPadding="8"
-            width="100%"
-            style={{ borderCollapse: "collapse" }}
-          >
-            <thead style={{ backgroundColor: "#f5f5f5" }}>
-              <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Merchant</th>
-                <th>Category</th>
-                <th>Amount ($)</th>
-                <th>Running Balance ($)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {txns.map((t) => (
-                <tr key={t.txn_id}>
-                  <td>{t.date}</td>
-                  <td>{t.description}</td>
-                  <td>{t.merchant || "-"}</td>
-                  <td>{t.category}</td>
-                  <td
-                    style={{
-                      color: t.amount < 0 ? "red" : "green",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {t.amount.toFixed(2)}
-                  </td>
-                  <td
-                    style={{
-                      color: "#555",
-                      fontWeight: "500",
-                      textAlign: "right",
-                    }}
-                  >
-                    {t.running_balance?.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
+    <div className="transactions-by-month">
+      {Object.entries(data)
+        .sort(([a], [b]) => b.localeCompare(a))
+        .map(([month, txns]) => (
+          <div key={month} className="month-section">
+            <h3 className="month-header">{formatMonth(month)}</h3>
+            <div className="transactions-table-container">
+              <table className="transactions-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Merchant</th>
+                    <th>Category</th>
+                    <th className="amount-header">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {txns.map((t) => (
+                    <tr key={t.txn_id} className="transaction-row">
+                      <td className="date-cell">{formatDate(t.date)}</td>
+                      <td className="description-cell">{t.description}</td>
+                      <td className="merchant-cell">{t.merchant || "-"}</td>
+                      <td>
+                        <span className="category-badge">{t.category}</span>
+                      </td>
+                      <td className={`amount-cell ${t.amount >= 0 ? 'positive' : 'negative'}`}>
+                        {t.amount >= 0 ? '+' : ''}${t.amount.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
     </div>
   );
+}
+
+function formatMonth(month) {
+  const [year, monthNum] = month.split('-');
+  const date = new Date(year, parseInt(monthNum) - 1);
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
