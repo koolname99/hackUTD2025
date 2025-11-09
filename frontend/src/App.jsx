@@ -1,11 +1,14 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Login from "./components/Login";
 import TransactionsByMonth from "./components/TransactionsByMonth";
 
-function App() {
+export default function App() {
   return (
-    <div>
-      <TransactionsByMonth />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/transactions" element={<TransactionsByMonth />} />
+      </Routes>
+    </Router>
   );
 }
-
-export default App;

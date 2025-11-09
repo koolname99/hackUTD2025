@@ -10,6 +10,38 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// LOGIN route
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // tìm account trong MongoDB theo email
+    const account = await Account.findOne({ "auth.email": email });
+
+    if (!account) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // kiểm tra password (chưa hash)
+    if (account.auth.password !== password) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    // nếu hợp lệ
+    res.json({
+      message: "Login successful",
+      user: {
+        email: account.auth.email,
+        role: account.auth.role,
+        customerName: account.customer?.name,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Test route
 app.get("/", (req, res) => {
   res.send("API is running...");
