@@ -38,7 +38,7 @@ Before running this application, make sure you have:
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/koolname99/hackUTD2025.git
-cd hackUTD2025-1
+cd hackUTD2025
 ```
 
 ### 2. Backend Setup
