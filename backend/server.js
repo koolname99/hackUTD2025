@@ -818,11 +818,6 @@ app.post("/api/ai/chat", async (req, res) => {
     if (!message) {
       return res.status(400).json({ error: "Message is required" });
     }
-
-    const GEMINI_API_KEY = "AIzaSyCvaT2s6nvpt9Sz02rcrCaTx4w-jP9G6X8";
-    // Try gemini-1.5-pro first, fallback to gemini-pro
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
-
     try {
       const response = await axios.post(GEMINI_API_URL, {
         contents: [{
