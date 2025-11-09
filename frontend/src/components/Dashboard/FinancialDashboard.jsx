@@ -19,10 +19,13 @@ export default function FinancialDashboard() {
   const [categoryBudgets, setCategoryBudgets] = useState({}); // { "2025-11": { "Food": 500, "Housing": 1200 } }
   const [showAddCategoryForm, setShowAddCategoryForm] = useState(false);
   const [newCategoryData, setNewCategoryData] = useState({ category: '', month: '2025-11', budget: '' });
+  const [cards, setCards] = useState([]); // Store cards for bank filter
+  const [selectedMonth, setSelectedMonth] = useState('2025-11'); // Selected month for category display
   
   // Transaction filters and sorting
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
+  const [filterBank, setFilterBank] = useState(''); // Filter by bank/card
   const [sortBy, setSortBy] = useState('date'); // 'date', 'category', 'amount'
   const [sortOrder, setSortOrder] = useState('desc'); // 'asc', 'desc'
 
@@ -59,8 +62,9 @@ export default function FinancialDashboard() {
         setCategoryBudgets(budgets || {});
         
         // Get cards data and calculate total money (sum of all card balances)
-        const cards = cardsRes.data || [];
-        const totalCardBalance = cards.reduce((sum, card) => sum + (card.balance || 0), 0);
+        const cardsData = cardsRes.data || [];
+        setCards(cardsData); // Store cards for bank filter
+        const totalCardBalance = cardsData.reduce((sum, card) => sum + (card.balance || 0), 0);
         
         const monthlyData = [];
         const categoryData = {};
@@ -90,54 +94,103 @@ export default function FinancialDashboard() {
           flatBudgets = budgets["2025-11"];
         }
         
-        // Initialize November 2025 if budgets exist (even if no transactions)
-        console.log('🔍 Checking budgets for November:', flatBudgets);
+        // Initialize budgets for all months that have transactions (using same budgets as November)
+        console.log('🔍 Checking budgets:', flatBudgets);
         if (flatBudgets && Object.keys(flatBudgets).length > 0) {
           console.log('✅ Found budgets:', flatBudgets);
-          categoryMonthlyData["2025-11"] = {};
-          Object.keys(flatBudgets).forEach(category => {
-            let budgetValue = flatBudgets[category];
-            console.log(`  - ${category}: ${budgetValue} (type: ${typeof budgetValue})`);
-            
-            // Convert string to number if needed (MongoDB might return strings)
-            if (typeof budgetValue === 'string') {
-              budgetValue = parseFloat(budgetValue);
-              console.log(`    Converted to number: ${budgetValue}`);
+          
+          // Initialize budgets for all months in sortedMonths
+          sortedMonths.forEach(month => {
+            if (!categoryMonthlyData[month]) {
+              categoryMonthlyData[month] = {};
             }
             
-            // Only set to null if truly undefined or null, otherwise use the value (even if 0)
-            // Ensure we preserve the actual number value
-            const finalBudget = (budgetValue !== undefined && budgetValue !== null && !isNaN(budgetValue) && typeof budgetValue === 'number') 
-              ? budgetValue 
-              : null;
-            
-            console.log(`    Final budget: ${finalBudget} (type: ${typeof finalBudget})`);
-            
-            categoryMonthlyData["2025-11"][category] = {
-              spent: 0,
-              budget: finalBudget
-            };
+            // Apply same budgets to all months
+            Object.keys(flatBudgets).forEach(category => {
+              let budgetValue = flatBudgets[category];
+              console.log(`  - ${category}: ${budgetValue} (type: ${typeof budgetValue})`);
+              
+              // Convert string to number if needed (MongoDB might return strings)
+              if (typeof budgetValue === 'string') {
+                budgetValue = parseFloat(budgetValue);
+                console.log(`    Converted to number: ${budgetValue}`);
+              }
+              
+              // Only set to null if truly undefined or null, otherwise use the value (even if 0)
+              // Ensure we preserve the actual number value
+              const finalBudget = (budgetValue !== undefined && budgetValue !== null && !isNaN(budgetValue) && typeof budgetValue === 'number') 
+                ? budgetValue 
+                : null;
+              
+              console.log(`    Final budget: ${finalBudget} (type: ${typeof finalBudget})`);
+              
+              // Only initialize if category doesn't exist yet
+              if (!categoryMonthlyData[month][category]) {
+                categoryMonthlyData[month][category] = {
+                  spent: 0,
+                  budget: finalBudget
+                };
+              }
+            });
           });
-          console.log('✅ Initialized November categories with budgets:', categoryMonthlyData["2025-11"]);
-          console.log('📊 Budget values check:', Object.entries(categoryMonthlyData["2025-11"]).map(([cat, info]) => 
-            `${cat}: budget=${info.budget} (type: ${typeof info.budget}, isNaN: ${isNaN(info.budget)})`
-          ));
+          
+          console.log('✅ Initialized all months with budgets');
+          if (categoryMonthlyData["2025-11"]) {
+            console.log('📊 November 2025 categories:', categoryMonthlyData["2025-11"]);
+            console.log('📊 Budget values check:', Object.entries(categoryMonthlyData["2025-11"]).map(([cat, info]) => 
+              `${cat}: budget=${info.budget} (type: ${typeof info.budget}, isNaN: ${isNaN(info.budget)})`
+            ));
+          }
         } else {
           console.warn('⚠️ No budgets found');
           console.log('Budgets object:', flatBudgets);
         }
         
+        // Helper function to assign transaction to a card based on balance
+        const assignTransactionToCard = (txn, cardsData) => {
+          if (!cardsData || cardsData.length === 0) return null;
+          
+          // Calculate total balance
+          const totalBalance = cardsData.reduce((sum, card) => sum + (card.balance || 0), 0);
+          if (totalBalance === 0) {
+            // If all balances are 0, assign randomly
+            return cardsData[Math.floor(Math.random() * cardsData.length)].name;
+          }
+          
+          // Assign based on balance proportion (weighted random)
+          const random = Math.random() * totalBalance;
+          let cumulative = 0;
+          for (const card of cardsData) {
+            cumulative += (card.balance || 0);
+            if (random <= cumulative) {
+              return card.name;
+            }
+          }
+          
+          // Fallback to last card
+          return cardsData[cardsData.length - 1].name;
+        };
+        
+        // Filter out transactions after November 8, 2025
+        const maxDate = new Date('2025-11-08T23:59:59');
+        
         sortedMonths.forEach(month => {
           const txns = res[month] || [];
           let monthTotal = 0;
+          
+          // Filter out transactions after November 8, 2025
+          const filteredTxns = txns.filter(txn => {
+            const txnDate = new Date(txn.date);
+            return txnDate <= maxDate;
+          });
           
           if (!categoryMonthlyData[month]) {
             categoryMonthlyData[month] = {};
           }
           
           // Initialize all categories with budgets (even if no transactions yet)
-          // Only for November 2025 (current month)
-          if (month === "2025-11" && flatBudgets) {
+          // Apply same budgets to all months
+          if (flatBudgets) {
             Object.keys(flatBudgets).forEach(category => {
               if (!categoryMonthlyData[month][category]) {
                 let budgetValue = flatBudgets[category];
@@ -159,8 +212,8 @@ export default function FinancialDashboard() {
             });
           }
           
-          if (Array.isArray(txns)) {
-            txns.forEach(txn => {
+          if (Array.isArray(filteredTxns)) {
+            filteredTxns.forEach(txn => {
               // Calculate monthly spending (only negative amounts - expenses)
               if (txn.amount < 0) {
                 monthTotal += Math.abs(txn.amount);
@@ -168,8 +221,8 @@ export default function FinancialDashboard() {
                 // Group by category per month
                 const category = txn.category || 'Other';
                 if (!categoryMonthlyData[month][category]) {
-                  // Only get budget for November 2025
-                  let budgetValue = (month === "2025-11" && flatBudgets) ? flatBudgets[category] : undefined;
+                  // Get budget for all months (same as November)
+                  let budgetValue = flatBudgets ? flatBudgets[category] : undefined;
                   
                   // Convert string to number if needed
                   if (typeof budgetValue === 'string') {
@@ -186,8 +239,8 @@ export default function FinancialDashboard() {
                   };
                 } else {
                   // Preserve existing budget if category already exists (from budget initialization)
-                  // Only update budget if it's missing and it's November 2025
-                  if ((categoryMonthlyData[month][category].budget === null || categoryMonthlyData[month][category].budget === undefined) && month === "2025-11" && flatBudgets) {
+                  // Update budget if it's missing (for all months, not just November)
+                  if ((categoryMonthlyData[month][category].budget === null || categoryMonthlyData[month][category].budget === undefined) && flatBudgets) {
                     let budgetValue = flatBudgets[category];
                     
                     // Convert string to number if needed
@@ -216,8 +269,12 @@ export default function FinancialDashboard() {
                 }
                 categoryData[category].spent += Math.abs(txn.amount);
                 
-                // Mock bank data - in real app, this would come from transaction data
-                const bank = txn.bank || getBankFromMerchant(txn.merchant) || 'Bank of America';
+                // Assign transaction to a card based on balance
+                const assignedCard = assignTransactionToCard(txn, cardsData);
+                txn.bank = assignedCard; // Store assigned card in transaction
+                
+                // Update bank breakdown with assigned card
+                const bank = assignedCard || 'Unknown';
                 if (!bankBreakdown[category]) {
                   bankBreakdown[category] = {};
                 }
@@ -229,10 +286,14 @@ export default function FinancialDashboard() {
             });
           }
           
-          monthlyData.push({
-            month,
-            amount: monthTotal
-          });
+          // Only add month to graph if it's before or equal to November 8, 2025
+          const monthDate = new Date(month + '-01');
+          if (monthDate <= maxDate) {
+            monthlyData.push({
+              month,
+              amount: monthTotal
+            });
+          }
         });
         
         // Store category monthly data (per month per category)
@@ -294,8 +355,8 @@ export default function FinancialDashboard() {
       await saveCategoryBudgets(user.email, updatedBudgets);
       setCategoryBudgets(updatedBudgets);
       
-      // Update categories state for November 2025
-      const monthKey = "2025-11";
+      // Update categories state for selected month
+      const monthKey = newCategoryData.month || selectedMonth;
       const updatedCategories = { ...categories };
       if (!updatedCategories[monthKey]) {
         updatedCategories[monthKey] = {};
@@ -307,7 +368,7 @@ export default function FinancialDashboard() {
       }
       setCategories(updatedCategories);
       
-      setNewCategoryData({ category: '', month: '2025-11', budget: '' });
+      setNewCategoryData({ category: '', month: selectedMonth, budget: '' });
       setShowAddCategoryForm(false);
     } catch (error) {
       console.error('Error adding category:', error);
@@ -345,15 +406,23 @@ export default function FinancialDashboard() {
   const formatMonth = (monthKey) => {
     if (!monthKey) return '';
     const [year, month] = monthKey.split('-');
-    const date = new Date(year, parseInt(month) - 1);
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    // Force English locale
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    return `${monthNames[parseInt(month) - 1]} ${year}`;
   };
 
 
   // Get graph data based on selection
   const getGraphData = () => {
+    const maxDate = new Date('2025-11-08T23:59:59');
+    
     if (!selectedCategory) {
-      return monthlySpending;
+      // Filter monthlySpending to only include months up to November 8
+      return monthlySpending.filter(item => {
+        const monthDate = new Date(item.month + '-01');
+        return monthDate <= maxDate;
+      });
     }
     
     // Calculate category spending by month from categories state
@@ -361,6 +430,9 @@ export default function FinancialDashboard() {
     const sortedMonths = Object.keys(categories).sort();
     
     sortedMonths.forEach(month => {
+      const monthDate = new Date(month + '-01');
+      if (monthDate > maxDate) return; // Skip months after November 8
+      
       const monthCategories = categories[month] || {};
       const categoryInfo = monthCategories[selectedCategory];
       const monthTotal = categoryInfo ? categoryInfo.spent : 0;
@@ -457,23 +529,49 @@ export default function FinancialDashboard() {
         </div>
       )}
 
-      {/* Category Cards - November Only */}
-      {categories["2025-11"] && Object.keys(categories["2025-11"]).length > 0 && (
-        <div className="categories-section">
-          <div className="categories-header">
-            <h2 className="categories-title">Spending by Category</h2>
-            <button 
-              className="btn-add-category"
-              onClick={() => setShowAddCategoryForm(true)}
-            >
-              + Add Category
-            </button>
-          </div>
-          
-          <div className="month-categories-section">
-            <h3 className="month-categories-title">{formatMonth("2025-11")}</h3>
-            <div className="category-cards">
-              {Object.entries(categories["2025-11"]).map(([category, info]) => {
+      {/* Category Cards - With Month Selection */}
+      {Object.keys(categories).length > 0 && (() => {
+        // Get available months from categories
+        const availableMonths = Object.keys(categories).sort((a, b) => b.localeCompare(a));
+        const currentMonthCategories = categories[selectedMonth] || {};
+        
+        return (
+          <div className="categories-section">
+            <div className="categories-header">
+              <h2 className="categories-title">Spending by Category</h2>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div className="filter-group" style={{ margin: 0 }}>
+                  
+                  <select
+                    id="category-month-select"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="sort-select"
+                    style={{ minWidth: '150px' }}
+                  >
+                    {availableMonths.map(month => (
+                      <option key={month} value={month}>
+                        {formatMonth(month)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button 
+                  className="btn-add-category"
+                  onClick={() => {
+                    setNewCategoryData({ ...newCategoryData, month: selectedMonth });
+                    setShowAddCategoryForm(true);
+                  }}
+                >
+                  + Add Category
+                </button>
+              </div>
+            </div>
+            
+            <div className="month-categories-section">
+              {Object.keys(currentMonthCategories).length > 0 ? (
+                <div className="category-cards">
+                  {Object.entries(currentMonthCategories).map(([category, info]) => {
                 console.log(`🎯 Rendering category ${category}:`, info);
                 const budget = (info.budget !== undefined && info.budget !== null && typeof info.budget === 'number') ? info.budget : null;
                 const spent = info.spent || 0;
@@ -483,7 +581,7 @@ export default function FinancialDashboard() {
                 
                 return (
                   <div
-                    key={`2025-11-${category}`}
+                    key={`${selectedMonth}-${category}`}
                     className={`category-card ${isSelected ? 'selected' : ''}`}
                     onClick={() => handleCategoryClick(category)}
                   >
@@ -494,7 +592,7 @@ export default function FinancialDashboard() {
                         className="btn-delete-category"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteCategory("2025-11", category);
+                          handleDeleteCategory(selectedMonth, category);
                         }}
                         title="Delete category budget"
                       >
@@ -523,10 +621,21 @@ export default function FinancialDashboard() {
                   </div>
                 );
               })}
+                </div>
+              ) : (
+                <div className="no-categories-message" style={{ 
+                  textAlign: 'center', 
+                  padding: '40px 20px', 
+                  color: '#9ca3af', 
+                  fontSize: '14px' 
+                }}>
+                  No categories found for {formatMonth(selectedMonth)}
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Add Category Form Modal */}
       {showAddCategoryForm && (
@@ -549,18 +658,6 @@ export default function FinancialDashboard() {
                   onChange={(e) => setNewCategoryData({ ...newCategoryData, category: e.target.value })}
                   placeholder="e.g., Food, Housing, Entertainment"
                   required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="category-month">Month *</label>
-                <input
-                  type="month"
-                  id="category-month"
-                  value={newCategoryData.month}
-                  onChange={(e) => setNewCategoryData({ ...newCategoryData, month: e.target.value })}
-                  required
-                  disabled
-                  style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
                 />
               </div>
               <div className="form-group">
@@ -599,6 +696,14 @@ export default function FinancialDashboard() {
           }
         });
         
+        // Filter out transactions after November 8, 2025
+        const maxDate = new Date('2025-11-08T23:59:59');
+        allTransactions = allTransactions.filter(txn => {
+          const txnDate = new Date(txn.date);
+          if (txnDate > maxDate) return false;
+          return true;
+        });
+        
         // Filter by date range
         if (filterStartDate || filterEndDate) {
           allTransactions = allTransactions.filter(txn => {
@@ -606,6 +711,14 @@ export default function FinancialDashboard() {
             if (filterStartDate && txnDate < new Date(filterStartDate)) return false;
             if (filterEndDate && txnDate > new Date(filterEndDate + 'T23:59:59')) return false;
             return true;
+          });
+        }
+        
+        // Filter by bank/card (use assigned card from transaction)
+        if (filterBank) {
+          allTransactions = allTransactions.filter(txn => {
+            const txnBank = txn.bank || '';
+            return txnBank === filterBank;
           });
         }
         
@@ -658,6 +771,23 @@ export default function FinancialDashboard() {
                 </div>
                 
                 <div className="filter-group">
+                  <label htmlFor="filter-bank">Card/Bank:</label>
+                  <select
+                    id="filter-bank"
+                    value={filterBank}
+                    onChange={(e) => setFilterBank(e.target.value)}
+                    className="sort-select"
+                  >
+                    <option value="">All Cards/Banks</option>
+                    {cards.map((card) => (
+                      <option key={card.id} value={card.name}>
+                        {card.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="filter-group">
                   <label htmlFor="sort-by">Sort By:</label>
                   <select
                     id="sort-by"
@@ -684,11 +814,12 @@ export default function FinancialDashboard() {
                   </select>
                 </div>
                 
-                {(filterStartDate || filterEndDate) && (
+                {(filterStartDate || filterEndDate || filterBank) && (
                   <button
                     onClick={() => {
                       setFilterStartDate('');
                       setFilterEndDate('');
+                      setFilterBank('');
                     }}
                     className="btn-clear-filters"
                   >
@@ -751,9 +882,13 @@ function formatMonthShort(month) {
 }
 
 function formatMonth(month) {
+  if (!month) return '';
   const [year, monthNum] = month.split('-');
   const date = new Date(year, parseInt(monthNum) - 1);
-  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  // Force English locale
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+  return `${monthNames[parseInt(monthNum) - 1]} ${year}`;
 }
 
 function formatDate(dateString) {
